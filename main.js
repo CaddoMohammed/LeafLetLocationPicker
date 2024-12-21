@@ -120,9 +120,17 @@ function a2(){
 			B[0][0].classList.add("is-invalid");
 			B[0][1].innerHTML = "Solamente números";
 		}
+		else{
+			B[0][0].classList.remove("is-invalid");
+			B[0][1].innerHTML = "";
+		}
 		if(isNaN(B[1][0].value)){
 			B[1][0].classList.add("is-invalid");
 			B[1][1].innerHTML = "Solamente números";
+		}
+		else{
+			B[1][0].classList.remove("is-invalid");
+			B[1][1].innerHTML = "";
 		}
 		return;
 	}
@@ -131,15 +139,19 @@ function a2(){
 		B[0][1].innerHTML = "La latitud solo desde -90° hasta 90°";
 		return;
 	}
+	else{
+		B[0][0].classList.remove("is-invalid");
+		B[0][1].innerHTML = "";
+	}
 	if((B[1][0].value>180)||(B[1][0].value<-180)){
 		B[1][0].classList.add("is-invalid");
 		B[1][1].innerHTML = "La longitud solo desde -180° hasta 180°";
 		return;
 	}
-	B[0][0].classList.remove("is-invalid");
-	B[0][1].innerHTML = "";
-	B[1][0].classList.remove("is-invalid");
-	B[1][1].innerHTML = "";
+	else{
+		B[1][0].classList.remove("is-invalid");
+		B[1][1].innerHTML = "";
+	}
 	if((B[0][0].value!=="")&&(B[1][0].value!=="")){
 		V.setView([Number(B[0][0].value),Number(B[1][0].value)],7);
 		SetLocation(B[0][0].value,B[1][0].value,V);
