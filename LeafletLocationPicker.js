@@ -1,52 +1,98 @@
-const LeafletLocationPicker = {
-	"Marker":null,
-	"width":12,
-	"height":12,
-	"color":"#000000",
-	"thickness":2.5,
-	"label":{"title":"","direction":"","always visible":false},
-	"PickLocation": function(mapa,inputs){
-		let keys = ["lat","lng"];
-		for(i in keys){
-			if(inputs[keys[i]]===undefined){return};
+function LeafletLocationPicker(map,a,b,c){
+	if(map===undefined){return};
+	let inputs,fix,config,arrays=0,objects=0,int=0;
+	if(a!==undefined){
+		if(Array.isArray(a)){arrays=arrays+1;inputs=a};
+		if(Number.isInteger(a)){int=int+1;fix=a};
+		if((typeof(a)==="object")&&!Array.isArray(a)){objects=objects+1;config=a};
+	}
+	if(b!==undefined){
+		if(Array.isArray(b)){arrays=arrays+1;inputs=b};
+		if(Number.isInteger(b)){int=int+1;fix=b};
+		if((typeof(b)==="object")&&!Array.isArray(b)){objects=objects+1;config=b};
+	}
+	if(c!==undefined){
+		if(Array.isArray(c)){arrays=arrays+1;inputs=c};
+		if(Number.isInteger(c)){int=int+1;fix=c};
+		if((typeof(c)==="object")&&!Array.isArray(c)){objects=objects+1;config=c};
+	}
+	if(arrays>1){console.error("Invalid parameters: only 1 array [lat,lng] is allowed");return};
+	if(int>1){console.error("Invalid parameters: only 1 integer for decimal precision is allowed");return};
+	if(objects>1){console.error("Invalid parameters: only 1 object for configuration is allowed");return};
+	if((inputs!==undefined)&&(inputs.length!==2)){console.error("expected an array of length 2");return};
+	LeafletLocationPickerConfig(map,config);
+	map.on('click',function(w){
+		let coords = [w.latlng.lat,w.latlng.lng];
+		if(fix!==undefined){
+			coords = [w.latlng.lat.toFixed(fix),w.latlng.lng.toFixed(fix)];
 		}
-		mapa.on('click',function(W){
-			let coords = {"lat":W.latlng.lat,"lng":W.latlng.lng};
-			for(let i in coords){
-				let a = "";
-				if(inputs[i] instanceof HTMLElement){a="innerHTML"};
-				if(inputs[i] instanceof HTMLInputElement){a="value"};
-				if(a===""){inputs[i] = coords[i]};
-				if(a!==""){inputs[i][a] = coords[i]};
+		for(let i=0;i<inputs.length;i++){
+			let a = "";
+			if(inputs[i] instanceof HTMLElement){a="innerHTML"};
+			if(inputs[i] instanceof HTMLInputElement){a="value"};
+			if(a===""){inputs[i] = coords[i]};
+			if(a!==""){inputs[i][a] = coords[i]};
+		}
+		LeafletSetLocation(map,coords,false);
+	});
+}
+function LeafletSetLocation(map,coordenadas,move){
+	if((!Array.isArray(coordenadas))||coordenadas.length!==2){console.error("expected an array of length 2");return};
+	for(let i=0;i<coordenadas.length;i++){
+		if(isNaN(coordenadas[i])){console.error(`value for ${i} is NaN`);return};
+	}
+	let x=map["LeafletLocationPicker"],label=map["LeafletLocationPicker"]["label"];
+	if(x["marker"]){map.removeLayer(x["marker"])};
+	if(label["title"]===""){
+		x["marker"] = L.marker(coordenadas,{icon:L.divIcon({className:"",iconSize:[x["width"],x["height"]],iconAnchor:x["margin"],html:x.icon(x["color"],x["thickness"])})}).addTo(map);
+	} else {
+		x["marker"] = L.marker(coordenadas,{icon:L.divIcon({className:"",iconSize:[x["width"],x["height"]],iconAnchor:x["margin"],html:x.icon(x["color"],x["thickness"])})}).addTo(map).bindTooltip(label["title"],{permanent:label["always visible"],"direction":label["direction"]});
+	}
+	if((move===true)||(move===undefined)){map.setView(coordenadas,map.getZoom())};
+}
+function LeafletLocationPickerConfig(map,config){
+	if(map["LeafletLocationPicker"]!==undefined){return};
+	map["LeafletLocationPicker"] = {
+		"label":{
+			"always visible":false,
+			"title":"",
+			"position":"top"
+		},
+		"width":24,
+		"height":24,
+		"color":"#000000",
+		"icon":function(color,thickness){
+			if(isNaN(thickness)){
+				console.error("expected a number for thickness");
+				return;
 			}
-			if(LeafletLocationPicker["SetLocation"]===undefined){console.error("function SetLocation() not found");return};
-			LeafletLocationPicker["SetLocation"](mapa,coords,false);
-		});
-	},
-	"SetLocation": function(mapa,coordenadas,move){
-		if((typeof(coordenadas)==="object")&&Array.isArray(coordenadas)){return};
-		let keys = ["lat","lng"];
-		for(i in keys){
-			if(coordenadas[keys[i]]===undefined){console.error(`undefined key ${keys[i]}`);return};
-			if(isNaN(coordenadas[keys[i]])){console.error(`value for ${keys[i]} is NaN`);return};
+			let icon =
+				`<div style="display:flex; flex-direction:column; width:100%; height:100%; align-items:center; justify-content:start;">
+					<div style="width:${thickness}%; height:${50-thickness/2}%; background-color:${color}; margin:0 auto;"></div>
+					<div style="width:100%; height:${thickness}%; background-color:${color};"></div>
+					<div style="width:${thickness}%; height:${50-thickness}%; background-color:${color}; margin:0 auto;"></div>
+				</div>`;
+			return icon;
+		},
+		"margin":[12,12],
+		"thickness":8
+	}
+	SetConfig(map["LeafletLocationPicker"],config);
+	function SetConfig(x,y){
+		for(let i in y){
+			if(x[i]===undefined){continue};
+			if(typeof(y[i])!=="object"){
+				x[i] = y[i];
+				continue;
+			}
+			if(Array.isArray(y[i])){
+				x[i] = y[i];
+				continue;
+			}
+			if(typeof(y[i])==="object"){
+				SetConfig(x[i],y[i]);
+				continue;
+			}
 		}
-		if(LeafletLocationPicker["icon"]===undefined){
-			LeafletLocationPicker["icon"] =
-				`<div style="display:flex; align-items:center; background-color:transparent; flex-wrap:nowrap; flex-shrink:0;">
-					<div style="width:${LeafletLocationPicker["width"]-LeafletLocationPicker["thickness"]/2}px; height:${LeafletLocationPicker["thickness"]}px; background-color:${LeafletLocationPicker["color"]}; margin:auto 0"></div>
-							<div style="display:flex; flex-direction:column; flex-wrap:nowrap; flex-shrink:0;">
-								<div style="width:${LeafletLocationPicker["thickness"]}px; height:${LeafletLocationPicker["width"]}px; background-color:${LeafletLocationPicker["color"]};"></div>
-								<div style="width:${LeafletLocationPicker["thickness"]}px; height:${LeafletLocationPicker["width"]}px; background-color:${LeafletLocationPicker["color"]};"></div>
-							</div>
-					<div style="width:${LeafletLocationPicker["width"]-LeafletLocationPicker["thickness"]/2}px; height:${LeafletLocationPicker["thickness"]}px; background-color:${LeafletLocationPicker["color"]}; margin:auto 0"></div>
-				</div>`
-		}
-		if(LeafletLocationPicker["Marker"]!==null){mapa.removeLayer(LeafletLocationPicker["Marker"]);LeafletLocationPicker["Marker"]=null};
-		if((LeafletLocationPicker["label"]["title"]==="")||LeafletLocationPicker["label"]["direction"]===""){
-			LeafletLocationPicker["Marker"] = L.marker(coordenadas,{icon:L.divIcon({className:"",iconSize:[2*LeafletLocationPicker["width"],2*LeafletLocationPicker["height"]],iconAnchor:[LeafletLocationPicker["width"],LeafletLocationPicker["width"]],html:LeafletLocationPicker["icon"]})}).addTo(mapa);
-		} else {
-			LeafletLocationPicker["Marker"] = L.marker(coordenadas,{icon:L.divIcon({className:"",iconSize:[2*LeafletLocationPicker["width"],2*LeafletLocationPicker["height"]],iconAnchor:[LeafletLocationPicker["width"],LeafletLocationPicker["width"]],html:LeafletLocationPicker["icon"]})}).addTo(mapa).bindTooltip(LeafletLocationPicker["label"]["title"],{permanent:LeafletLocationPicker["label"]["always visible"],"direction":LeafletLocationPicker["label"]["direction"]});
-		}
-		if((move==true)||(move===undefined)){mapa.setView(coordenadas,mapa.getZoom())};
 	}
 }
