@@ -36,14 +36,15 @@ function LeafletLocationPicker(map,a,b,c){
 		LeafletSetLocation(map,coords,false);
 	});
 }
-function LeafletSetLocation(map,coordenadas,move){
-	if((!Array.isArray(coordenadas))||coordenadas.length!==2){console.error("expected an array of length 2");return};
-	let name = ["lat","lng"];
-	for(let i=0;i<coordenadas.length;i++){
+function LeafletSetLocation(map,values,move){
+	if((!Array.isArray(values))||values.length!==2){console.error("expected an array of length 2");return};
+	let coordenadas=[undefined,undefined],name=["lat","lng"];
+	for(let i=0;i<values.length;i++){
 		let a = "";
-		if(coordenadas[i] instanceof HTMLElement){a="innerHTML"};
-		if(coordenadas[i] instanceof HTMLInputElement){a="value"};
-		if(a!==""){coordenadas[i] = coordenadas[i][a]};
+		if(values[i] instanceof HTMLElement){a="innerHTML"};
+		if(values[i] instanceof HTMLInputElement){a="value"};
+		if(a===""){coordenadas[i] = values[i]};
+		if(a!==""){coordenadas[i] = values[i][a]};
 		if(isNaN(coordenadas[i])){console.error(`value for ${name[i]} is NaN`);return};
 	}
 	let x=map["LeafletLocationPicker"],label=map["LeafletLocationPicker"]["label"];
