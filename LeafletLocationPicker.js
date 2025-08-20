@@ -38,8 +38,13 @@ function LeafletLocationPicker(map,a,b,c){
 }
 function LeafletSetLocation(map,coordenadas,move){
 	if((!Array.isArray(coordenadas))||coordenadas.length!==2){console.error("expected an array of length 2");return};
+	let name = ["lat","lng"];
 	for(let i=0;i<coordenadas.length;i++){
-		if(isNaN(coordenadas[i])){console.error(`value for ${i} is NaN`);return};
+		let a = "";
+		if(coordenadas[i] instanceof HTMLElement){a="innerHTML"};
+		if(coordenadas[i] instanceof HTMLInputElement){a="value"};
+		if(a!==""){coordenadas[i] = coordenadas[i][a]};
+		if(isNaN(coordenadas[i])){console.error(`value for ${name[i]} is NaN`);return};
 	}
 	let x=map["LeafletLocationPicker"],label=map["LeafletLocationPicker"]["label"];
 	if(x["marker"]){map.removeLayer(x["marker"])};
@@ -52,6 +57,23 @@ function LeafletSetLocation(map,coordenadas,move){
 }
 function LeafletLocationPickerConfig(map,config){
 	if(map["LeafletLocationPicker"]!==undefined){return};
+	function SetConfig(x,y){
+		for(let i in y){
+			if(x[i]===undefined){continue};
+			if(typeof(y[i])!=="object"){
+				x[i] = y[i];
+				continue;
+			}
+			if(Array.isArray(y[i])){
+				x[i] = y[i];
+				continue;
+			}
+			if(typeof(y[i])==="object"){
+				SetConfig(x[i],y[i]);
+				continue;
+			}
+		}
+	}
 	map["LeafletLocationPicker"] = {
 		"label":{
 			"always visible":false,
@@ -78,21 +100,4 @@ function LeafletLocationPickerConfig(map,config){
 		"thickness":8
 	}
 	SetConfig(map["LeafletLocationPicker"],config);
-	function SetConfig(x,y){
-		for(let i in y){
-			if(x[i]===undefined){continue};
-			if(typeof(y[i])!=="object"){
-				x[i] = y[i];
-				continue;
-			}
-			if(Array.isArray(y[i])){
-				x[i] = y[i];
-				continue;
-			}
-			if(typeof(y[i])==="object"){
-				SetConfig(x[i],y[i]);
-				continue;
-			}
-		}
-	}
 }
